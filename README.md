@@ -4,7 +4,7 @@
 This is the frontend side of a project for tracking worked hours and daily reports in presumably a company or some organization. 
 ## About the project
 
-The backend for this project can be found [here] (TODO: add link to backend when uploaded)
+The backend for this project can be found [here](https://github.com/DidoeS14/work-tracker-backend?tab=readme-ov-file)
 
 The project uses [Firebase](https://firebase.google.com) for authentication. You must have profile there and a running project in order to create profiles. I recommend [this](https://learnvue.co/articles/vue-firebase-authentication) tutorial from LearnVue.
 
@@ -72,4 +72,11 @@ To deploy this project run
 **Client:** Vue, Vuetify, Firebase, Axios
 
 **Server:** Node
+
+
+## Related
+
+Backend project:
+
+[Work Tracker Backend](https://github.com/DidoeS14/work-tracker-backend?tab=readme-ov-file)
 
