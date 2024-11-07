@@ -2,7 +2,7 @@
 # Work Tracker Frontend
 
 This is the frontend side of a project for tracking worked hours and daily reports in presumably a company or some organization. 
-## Backend reference
+## About the project
 
 The backend for this project can be found [here] (TODO: add link to backend when uploaded)
 
@@ -67,7 +67,9 @@ To deploy this project run
 ```
 
 
-## Authors
+## Tech Stack
 
-- [@DidoeS14](https://github.com/DidoeS14)
+**Client:** Vue, Vuetify, Firebase, Axios
+
+**Server:** Node
 
