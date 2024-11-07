@@ -1,8 +1,6 @@
 import version from '../package.json';
 
-/*
-Simple config file for global variables
-*/
+
 export default {
   apiBaseUrl: 'http://localhost:5000',// change to the address of your server
   authKey: 'authenticationKey',

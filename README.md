@@ -4,9 +4,32 @@
 This is the frontend side of a project for tracking worked hours and daily reports in presumably a company or some organization. 
 ## Backend reference
 
-The backend for this project can be found here [TODO: add link to backend when uploaded]
+The backend for this project can be found [here] (TODO: add link to backend when uploaded)
+
+The project uses [Firebase](https://firebase.google.com) for authentication. You must have profile there and a running project in order to create profiles. I recommend [this](https://learnvue.co/articles/vue-firebase-authentication) tutorial from LearnVue.
+
+After you setup your profile and project there you will need to fill your project credentials inside src/config.js as follows:
+
+```javascript
+import version from '../package.json';
 
 
+export default {
+  apiBaseUrl: 'http://localhost:5000',// change to the address of your server
+  authKey: 'authenticationKey',
+  appTitle: 'Work Tracker',
+  version: version,
+  firebaseConfig: {                 //place here your firebase credentials
+    apiKey: "your-api-key",
+    authDomain: "your-domain",
+    projectId: "your-project-id",
+    storageBucket: "your-storage-bucket",
+    messagingSenderId: "your-message-sender-id",
+    appId: "your-app-id"
+  }
+};
+
+```
 
 ## Run Locally
 
