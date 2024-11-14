@@ -15,3 +15,4 @@ export default {
     appId: "your-app-id"
   }
 };
+

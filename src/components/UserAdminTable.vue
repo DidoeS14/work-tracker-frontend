@@ -19,12 +19,13 @@
         </template>
       </v-data-table>
     </div>
-    <v-btn @click="getUserData" style="margin: 1 rem">Refresh</v-btn>
+    <v-btn @click="getUsersData" style="margin: 1 rem">Refresh</v-btn>
+    <v-btn @click="downloadUsersData" style="margin: 1rem;">Download</v-btn>
   </template>
   
   <script setup>
   import { defineProps, ref, onMounted } from "vue";
-  import { getData } from "@/services/api.js"; 
+  import { getData, postData } from "@/services/api.js"; 
   
   const props = defineProps({
     email: String,
@@ -41,9 +42,9 @@
   
 // Function to fetch user data from the server
 /**
- * @function getUserData is async funtion that fetches the user data from the backend server
+ * @function getUsersData is async funtion that fetches the user data from the backend server
  */
-  const getUserData = async () => {
+  const getUsersData = async () => {
     try {
       // Fetch the data using the `email` from props
       const data = { email: props.email };
@@ -61,10 +62,57 @@
       console.error("Error fetching user data:", error);
     }
   };
+
+  /**
+ * @function downloadUsersData makes a post request to /csv-users and gets data for the admin,
+ *  forms it into a .csv file and downloads it for the admin
+ */
+const downloadUsersData = async () => {
+  try {
+    const post_data = { email: props.email };
+    const response = await getData("/csv-users");
+
+    let csv = 'Date,User,Time,Report\n';
+
+    var data = response.userData;
+    console.log(data);
+
+    if (Array.isArray(data)) {
+      data.forEach((row) => {
+        // If the row is an object, convert its values to a CSV row
+        if (typeof row === 'object' && row !== null) {
+          // Extract the values from the object and join them with commas
+          const rowValues = [row.date, row.time, row.report];
+          csv += rowValues.join(',');
+          csv += "\n"; // Add a newline after each row
+        } else {
+          console.error('Each row in response should be an object');
+        }
+      });
+    } else {
+      console.error('Expected response to be an array, but got:', data);
+    }
+
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = ('0' + (date.getMonth() + 1)).slice(-2); 
+    const day = ('0' + date.getDate()).slice(-2); 
+  
+    // Create an anchor element to download the CSV file
+    const anchor = document.createElement('a');
+    anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    anchor.target = '_blank';
+    anchor.download = `reports.data.${year}.${month}.${day}.csv`; // Use email as the filename
+    anchor.click();
+
+  } catch (error) {
+    console.error("Error downloading user data:", error);
+  }
+};
   
   // Call getUserData on component mount
   onMounted(() => {
-    getUserData();
+    getUsersData();
   });
   </script>
   <style scoped>

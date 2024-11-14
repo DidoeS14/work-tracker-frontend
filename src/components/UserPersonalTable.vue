@@ -19,19 +19,21 @@
       </template>
     </v-data-table>
   </div>
-  <v-btn @click="getUserData" style="margin: 1 rem">Refresh</v-btn>
+  <v-btn @click="getUserData" style="margin: 1rem;">Refresh</v-btn>
+  <v-btn @click="downloadUserData" style="margin: 1rem;">Download</v-btn>
 </template>
 
 <script setup>
 import { defineProps, ref, onMounted } from "vue";
-import { postData } from "@/services/api.js";
+import { getData, postData } from "@/services/api.js";
+import { da } from "vuetify/locale";
 
 // Defined the props directly in defineProps
 const props = defineProps({
   email: String,
 });
 
-const userData = ref([]); 
+const userData = ref([]);
 
 const headers = [
   { title: "Date", align: "start", sortable: true, key: "date" },
@@ -61,6 +63,49 @@ const getUserData = async () => {
   }
 };
 
+/**
+ * @function downloadUserData makes a post request to /csv-user and gets data for the client,
+ *  forms it into a .csv file and downloads it for the client
+ */
+const downloadUserData = async () => {
+  try {
+    const post_data = { email: props.email };
+    const response = await postData("/csv-user", post_data);
+
+    let csv = 'Date,Time,Report\n';
+
+    var data = response.userData;
+    console.log(data);
+
+    if (Array.isArray(data)) {
+      data.forEach((row) => {
+        // If the row is an object, convert its values to a CSV row
+        if (typeof row === 'object' && row !== null) {
+          // Extract the values from the object and join them with commas
+          const rowValues = [row.date, row.time, row.report];
+          csv += rowValues.join(',');
+          csv += "\n"; // Add a newline after each row
+        } else {
+          console.error('Each row in response should be an object');
+        }
+      });
+    } else {
+      console.error('Expected response to be an array, but got:', data);
+    }
+
+    // Create an anchor element to download the CSV file
+    const anchor = document.createElement('a');
+    anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    anchor.target = '_blank';
+    anchor.download = `reports.data.${props.email}.csv`; // Use email as the filename
+    anchor.click();
+
+  } catch (error) {
+    console.error("Error downloading user data:", error);
+  }
+};
+
+
 // Call getUserData on component mount
 onMounted(() => {
   getUserData();
@@ -69,14 +114,22 @@ onMounted(() => {
 <style scoped>
 .report-cell {
   width: 50rem;
-  max-width: 50rem; /* Set a max-width for the report cell */
-  white-space: normal; /* Allows text to break into new lines */
-  word-wrap: break-word; /* Breaks long words */
-  overflow-wrap: break-word; /* Ensures long words break and wrap */
-  max-height: 100px; /* Max height of the report cell */
-  overflow-y: auto; /* Allows vertical scrolling if content exceeds the height */
-  padding: 4px; /* Add some padding for spacing */
-  display: block; /* Ensures the content behaves like a block element */
+  max-width: 50rem;
+  /* Set a max-width for the report cell */
+  white-space: normal;
+  /* Allows text to break into new lines */
+  word-wrap: break-word;
+  /* Breaks long words */
+  overflow-wrap: break-word;
+  /* Ensures long words break and wrap */
+  max-height: 100px;
+  /* Max height of the report cell */
+  overflow-y: auto;
+  /* Allows vertical scrolling if content exceeds the height */
+  padding: 4px;
+  /* Add some padding for spacing */
+  display: block;
+  /* Ensures the content behaves like a block element */
 }
 
 /* Optional: Style for when the content exceeds 50 characters */

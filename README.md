@@ -66,6 +66,15 @@ To deploy this project run
   npm run build
 ```
 
+## Features
+
+- User/Admin authentication
+- Time tracking
+- Push reports
+- User personal reports preview
+- User personal reports download
+- Admin global repoerts preview
+- Admin global repoerts download
 
 ## Tech Stack 🔧
 
