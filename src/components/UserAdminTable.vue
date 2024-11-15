@@ -82,7 +82,7 @@ const downloadUsersData = async () => {
         // If the row is an object, convert its values to a CSV row
         if (typeof row === 'object' && row !== null) {
           // Extract the values from the object and join them with commas
-          const rowValues = [row.date, row.time, row.report];
+          const rowValues = [row.date, row.user, row.time, row.report];
           csv += rowValues.join(',');
           csv += "\n"; // Add a newline after each row
         } else {
