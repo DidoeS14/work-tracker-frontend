@@ -1,7 +1,6 @@
 <template>
-  <!-- Shows the data only for the current user -->
   <div style="margin: 1rem">
-    <v-data-table :headers="headers" :items="userData" item-value="name">
+    <v-data-table :headers="headers" :items="userData" item-value="name" style="margin-top: 1rem;">
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Reports</v-toolbar-title>
@@ -18,17 +17,19 @@
         </tr>
       </template>
     </v-data-table>
+
+    <!-- Buttons -->
+    <v-btn @click="getUsersData" style="margin: 1rem;">Refresh</v-btn>
+    <v-btn @click="downloadUserData" style="margin: 1rem;">Download All</v-btn>
+    <v-btn @click="downloadPreviousMonthData" style="margin: 1rem;">Download Previous Month</v-btn>
+    <v-btn @click="downloadCurrentMonthData" style="margin: 1rem;">Download Current Month</v-btn>
   </div>
-  <v-btn @click="getUserData" style="margin: 1rem;">Refresh</v-btn>
-  <v-btn @click="downloadUserData" style="margin: 1rem;">Download</v-btn>
 </template>
 
 <script setup>
 import { defineProps, ref, onMounted } from "vue";
 import { getData, postData } from "@/services/api.js";
-import { da } from "vuetify/locale";
 
-// Defined the props directly in defineProps
 const props = defineProps({
   email: String,
 });
@@ -37,26 +38,21 @@ const userData = ref([]);
 
 const headers = [
   { title: "Date", align: "start", sortable: true, key: "date" },
-  { title: "Time", sortable: true, key: "time" },
-  { title: "Report", key: "report" },
+  { title: "Time (hours)", sortable: true, key: "time" },
+  { title: "Report", sortable: false, key: "report" },
 ];
 
-// Function to fetch user data from the server
 /**
- * @function getUserData is async funtion that fetches the user data from the backend server
+ * Fetch user data from the server
  */
-const getUserData = async () => {
+const getUsersData = async () => {
   try {
-    // Fetch the data using the `email` from props
     const data = { email: props.email };
-    const response = await postData("/csv-user", data);
-
-    const result = response;
-    if (result.userData) {
-      // Update user data from the response
-      userData.value = result.userData;
+    const response = await getData("/csv-users");
+    if (response.userData) {
+      userData.value = response.userData;
     } else {
-      console.error("Error fetching user data", result.error);
+      console.error("Error fetching user data", response.error);
     }
   } catch (error) {
     console.error("Error fetching user data:", error);
@@ -64,79 +60,113 @@ const getUserData = async () => {
 };
 
 /**
- * @function downloadUserData makes a post request to /csv-user and gets data for the client,
- *  forms it into a .csv file and downloads it for the client
+ * Download all user data as a CSV
  */
 const downloadUserData = async () => {
   try {
     const post_data = { email: props.email };
     const response = await postData("/csv-user", post_data);
 
-    let csv = 'Date,Time,Report\n';
-
-    var data = response.userData;
-    console.log(data);
+    let csv = "Date|Time|Report\n";
+    const data = response.userData;
 
     if (Array.isArray(data)) {
       data.forEach((row) => {
-        // If the row is an object, convert its values to a CSV row
-        if (typeof row === 'object' && row !== null) {
-          // Extract the values from the object and join them with commas
+        if (typeof row === "object" && row !== null) {
           const rowValues = [row.date, row.time, row.report];
-          csv += rowValues.join('|');
-          csv += "\n"; // Add a newline after each row
-        } else {
-          console.error('Each row in response should be an object');
+          csv += rowValues.join("|") + "\n";
         }
       });
     } else {
-      console.error('Expected response to be an array, but got:', data);
+      console.error("Expected response to be an array, but got:", data);
     }
 
-    // Create an anchor element to download the CSV file
-    const anchor = document.createElement('a');
-    anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    anchor.target = '_blank';
-    anchor.download = `reports.data.${props.email}.csv`; // Use email as the filename
+    const anchor = document.createElement("a");
+    anchor.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+    anchor.target = "_blank";
+    anchor.download = `reports.data.${props.email}.csv`;
     anchor.click();
-
   } catch (error) {
     console.error("Error downloading user data:", error);
   }
 };
 
+/**
+ * Get the date range for a specific month
+ */
+const getMonthDateRange = (year, month) => {
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+  return { startDate, endDate };
+};
 
-// Call getUserData on component mount
+/**
+ * Filter data by date range
+ */
+const filterDataByDateRange = (data, startDate, endDate) => {
+  return data.filter((row) => {
+    const rowDate = new Date(row.date);
+    return rowDate >= startDate && rowDate <= endDate;
+  });
+};
+
+/**
+ * Download current month's data
+ */
+const downloadCurrentMonthData = async () => {
+  const date = new Date();
+  const { startDate, endDate } = getMonthDateRange(date.getFullYear(), date.getMonth() + 1);
+  const filteredData = filterDataByDateRange(userData.value, startDate, endDate);
+  await downloadFilteredData(filteredData, "current_month");
+};
+
+/**
+ * Download previous month's data
+ */
+const downloadPreviousMonthData = async () => {
+  const date = new Date();
+  const { startDate, endDate } = getMonthDateRange(date.getFullYear(), date.getMonth());
+  const filteredData = filterDataByDateRange(userData.value, startDate, endDate);
+  await downloadFilteredData(filteredData, "previous_month");
+};
+
+/**
+ * Download filtered data as a CSV
+ */
+const downloadFilteredData = async (filteredData, periodLabel) => {
+  try {
+    let csv = "Date|Time|Report\n";
+    filteredData.forEach((row) => {
+      const rowValues = [row.date, row.time, row.report];
+      csv += rowValues.join("|") + "\n";
+    });
+
+    const anchor = document.createElement("a");
+    anchor.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+    anchor.target = "_blank";
+    anchor.download = `reports.${props.email}.${periodLabel}.csv`;
+    anchor.click();
+  } catch (error) {
+    console.error(`Error downloading ${periodLabel} data:`, error);
+  }
+};
+
+// Fetch data on component mount
 onMounted(() => {
-  getUserData();
+  getUsersData();
 });
 </script>
+
 <style scoped>
 .report-cell {
   width: 50rem;
   max-width: 50rem;
-  /* Set a max-width for the report cell */
   white-space: normal;
-  /* Allows text to break into new lines */
   word-wrap: break-word;
-  /* Breaks long words */
   overflow-wrap: break-word;
-  /* Ensures long words break and wrap */
   max-height: 100px;
-  /* Max height of the report cell */
   overflow-y: auto;
-  /* Allows vertical scrolling if content exceeds the height */
   padding: 4px;
-  /* Add some padding for spacing */
   display: block;
-  /* Ensures the content behaves like a block element */
-}
-
-/* Optional: Style for when the content exceeds 50 characters */
-.report-cell::after {
-  content: "";
-  display: block;
-  background: #f0f0f0;
-  margin-top: 4px;
 }
 </style>
