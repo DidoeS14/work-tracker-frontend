@@ -83,7 +83,7 @@ const downloadUsersData = async () => {
         if (typeof row === 'object' && row !== null) {
           // Extract the values from the object and join them with commas
           const rowValues = [row.date, row.user, row.time, row.report];
-          csv += rowValues.join(',');
+          csv += rowValues.join('|');
           csv += "\n"; // Add a newline after each row
         } else {
           console.error('Each row in response should be an object');
