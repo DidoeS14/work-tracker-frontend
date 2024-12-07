@@ -42,17 +42,22 @@ const headers = [
   { title: "Report", sortable: false, key: "report" },
 ];
 
+// Function to fetch user data from the server
 /**
- * Fetch user data from the server
+ * @function getUserData is async funtion that fetches the user data from the backend server
  */
-const getUsersData = async () => {
+const getUserData = async () => {
   try {
+    // Fetch the data using the `email` from props
     const data = { email: props.email };
-    const response = await getData("/csv-users");
-    if (response.userData) {
-      userData.value = response.userData;
+    const response = await postData("/csv-user", data);
+
+    const result = response;
+    if (result.userData) {
+      // Update user data from the response
+      userData.value = result.userData;
     } else {
-      console.error("Error fetching user data", response.error);
+      console.error("Error fetching user data", result.error);
     }
   } catch (error) {
     console.error("Error fetching user data:", error);
